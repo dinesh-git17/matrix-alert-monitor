@@ -1,101 +1,189 @@
-import Image from "next/image";
+'use client'
+
+import { AlertCard, AlertStatus } from '@/components/AlertCard'
+import { FakeTerminal } from '@/components/FakeTerminal'
+import { MatrixRain } from '@/components/MatrixRain'
+import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+
+type Alert = {
+  id: number
+  title: string
+  status: AlertStatus
+}
+
+let alertId = 0
+
+const STATIC_ALERTS: Alert[] = [
+  { id: ++alertId, title: 'Internet Connection Stable', status: 'ok' },
+  { id: ++alertId, title: 'Database Connectivity Healthy', status: 'ok' },
+  { id: ++alertId, title: 'Claims DB Offline Detected', status: 'error' },
+  { id: ++alertId, title: 'API Load Reaching Threshold', status: 'warning' },
+]
+
+function generateClaimsAlerts(): Alert[] {
+  const okAlerts = [
+    'Auto-approved 42 low-risk claims',
+    'Ingested 128 claims from Ontario batch',
+    'NLP tagging success rate: 100%',
+    'ClaimsAI_CoreModel v2.8.12 loaded successfully',
+    'All API endpoints responded < 200ms',
+    'Fraud scoring model running within baseline range',
+    '100% of predictions within confidence threshold',
+    'Tokenization pipeline operational',
+    'Real-time claims stream processed',
+    'Latency < 90ms on fraud prediction',
+    'Data sync with claims DB successful',
+    'Zero anomalies detected in batch 7839',
+    'Claims AI passed all health checks',
+    'JWT tokens refreshed and valid',
+    'Nightly model retraining completed successfully',
+    'Entity recognition passed on 100% of samples',
+    'Auto-labeling pipeline stable for past 24 hours',
+    'Input data schema matches expected v4.2',
+    'Worker threads balanced across nodes',
+    'Vector embeddings synced to shared memory',
+  ]
+
+  const warningAlerts = [
+    'Latency spike in inference cluster #2',
+    '6% of claims flagged as borderline cases',
+    'Fraud score deviation nearing 3σ threshold',
+    'Model prediction confidence dropped to 82%',
+    'Anomaly rate: 2.9% (baseline: 0.87%)',
+    'Batch 9843 missing provider zip code in 12 records',
+    'Unexpected entity detected: “PayerOverride”',
+    'Average claim ingestion rate decreased by 40%',
+    'NLP tokenizer fallback triggered for 17 samples',
+    '1 of 5 retraining tasks exceeded time limit',
+    'Validation schema version mismatch: v4.1 vs v4.2',
+    'Auto-correction applied to 9 malformed claim dates',
+    'Redis cache saturation at 75% capacity',
+    'Worker thread CPU load exceeded 80%',
+    'Retry queue increased from 3 → 24 in last 10 min',
+    'Duplicate claim detection triggered (possible flood)',
+  ]
+
+  const errorAlerts = [
+    'Claims DB unreachable – 3 attempts failed',
+    'Claim ID: 98234 failed scoring – null features',
+    'JWT token expired – re-authentication failed',
+    'POST /claims → 502 Bad Gateway',
+    'NLP parser exception on Claim ID 77191',
+    'Timeout contacting provider API (timeout: 30s)',
+    'Retry limit exceeded for batch: 9942',
+    'Embedding vector dimension mismatch detected',
+    'Redis cache connection refused',
+    'Duplicate Claim ID received from upstream',
+    'Job scheduler failed to execute nightly retrain',
+    'Model drift threshold exceeded: 12.3% shift',
+    'Labeling service returned empty labels',
+    'EntityRecognizer crashed (SegFault)',
+    'Claim note preprocessing returned NaN',
+    'Unauthorized access attempt blocked (IP: 10.1.3.42)',
+    'Zero claims processed in last 15 min – ingestion stall',
+  ]
+
+  const allAlerts: Alert[] = []
+
+  for (let i = 0; i < 40; i++) {
+    const roll = Math.random()
+    let status: AlertStatus
+    let message: string
+
+    if (roll < 0.7) {
+      status = 'ok'
+      message = okAlerts[Math.floor(Math.random() * okAlerts.length)]
+    } else if (roll < 0.9) {
+      status = 'warning'
+      message = warningAlerts[Math.floor(Math.random() * warningAlerts.length)]
+    } else {
+      status = 'error'
+      message = errorAlerts[Math.floor(Math.random() * errorAlerts.length)]
+    }
+
+    allAlerts.push({
+      id: ++alertId,
+      title: message,
+      status,
+    })
+  }
+
+  return allAlerts
+}
+
+const CARD_HEIGHT = 72
+const INTERVAL_MS = 1500
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [offset, setOffset] = useState(0)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    setAlerts([...STATIC_ALERTS, ...generateClaimsAlerts()])
+  }, [])
+
+  const duplicatedAlerts = [...alerts, ...alerts]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOffset((prev) => {
+        const next = prev + 1
+        if (next >= alerts.length) {
+          // Instantly reset offset to 0 visually (no blink)
+          return 0
+        }
+        return next
+      })
+    }, INTERVAL_MS)
+
+    return () => clearInterval(interval)
+  }, [alerts])
+
+  return (
+    <main className="flex flex-col justify-between min-h-screen bg-black text-matrixGreen font-mono">
+      <MatrixRain />
+
+      <div className="px-6 pt-6 grow">
+        <div className="flex flex-col lg:flex-row gap-6 h-full">
+          <div className="w-full lg:w-1/3 h-[85vh] border border-green-500 rounded-xl bg-black/80 backdrop-blur-md p-4 overflow-hidden shadow-md neon-frame">
+            <FakeTerminal />
+          </div>
+
+          <div className="w-full lg:w-2/3 h-[85vh] border border-green-500 rounded-xl bg-black/80 backdrop-blur-md shadow-inner relative overflow-hidden neon-frame">
+            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black to-transparent z-20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent z-20 pointer-events-none" />
+
+            <motion.div
+              animate={{ y: -CARD_HEIGHT * offset }}
+              transition={{ ease: 'linear', duration: 0.5 }}
+              className="flex flex-col"
+              style={{ height: `${CARD_HEIGHT * duplicatedAlerts.length}px` }}
+            >
+              {duplicatedAlerts.map((alert, index) => (
+                <div key={`${alert.id}-${index}`} className="h-[72px] overflow-hidden">
+                  <AlertCard title={alert.title} status={alert.status} />
+                </div>
+              ))}
+            </motion.div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      </div>
+
+      <div className="px-6 pb-6 flex flex-col items-center gap-3 z-10">
+        <div className="text-xs text-green-400 font-mono bg-black/60 rounded-lg border border-green-700 px-6 py-2 shadow-inner flex justify-center gap-6 tracking-wider">
+          <span>💚 System Pulse: ▓ ▓ ▓ ▓ ░ ░ ░</span>
+          <span>🧠 CPU: 42%</span>
+          <span>📦 RAM: 7.3 GB / 16 GB</span>
+          <span>🌀 Claims/s: 37</span>
+        </div>
+
+        <div className="bg-black/70 border-t border-green-500 py-1 w-full overflow-hidden">
+          <div className="animate-marquee whitespace-nowrap text-green-400 text-xs font-mono px-4 tracking-wide">
+            🔁 {alerts.slice(-5).map(a => a.title).join('  •  ')}
+          </div>
+        </div>
+      </div>
+    </main>
+  )
 }
